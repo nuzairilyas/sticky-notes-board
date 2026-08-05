@@ -42,51 +42,6 @@ The application interface consists of three primary visual layers:
 
 ---
 
-## 🏗️ System Architecture
-
-The application is structured as a client-side Single Page Application (SPA) following a **Modular Layered Architecture** with strict separation of concerns between Data Services, Data Models, UI View Components, and Application Controllers.
-
-```mermaid
-flowchart TD
-    subgraph View ["View Layer (HTML5 / CSS3 / Glassmorphism)"]
-        H["Header & '+ Add Note' Button"]
-        M["Color Picker Modal Window"]
-        NG["Notes Container Grid"]
-        N["Sticky Note Cards & Textareas"]
-        E["Empty Board State Indicator"]
-    end
-
-    subgraph Controller ["Controller & Logic Layer (JavaScript ES6+)"]
-        AC["AppController (App Orchestrator)"]
-        MC["ModalController (Modal Manager)"]
-        NC["NoteComponent (View Renderer)"]
-    end
-
-    subgraph Model ["Model Layer"]
-        NM["NoteModel (ID, Content, Color, Timestamps)"]
-    end
-
-    subgraph Storage ["Persistence Service Layer"]
-        SS["StorageService (localStorage Abstraction)"]
-        LS[("Browser localStorage: 'stickyNotes'")]
-    end
-
-    %% User Actions
-    H -->|Click '+ Add Note'| MC
-    MC -->|Open Modal & Pick Swatch| AC
-    AC -->|Instantiate Model| NM
-    AC -->|Pass Model & Callbacks| NC
-    NC -->|Render DOM Element| NG
-    N -->|Input Text Event| AC
-    N -->|Click Delete Button| AC
-
-    %% Data Flow & Persistence
-    AC -->|saveNotes(notes)| SS
-    SS -->|setItem / getItem| LS
-    LS -->|getNotes() on Load| SS
-    SS -->|Initialize App State| AC
-    AC -->|Toggle Empty State| E
-```
 
 ### Data Flow Lifecycle
 
