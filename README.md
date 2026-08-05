@@ -131,9 +131,3 @@ Open the provided URL (e.g., `http://localhost:3000`).
 * **HTML5**: Semantic tags (`<header>`, `<main>`, `<dialog>`, `<button>`).
 * **CSS3**: Dynamic gradients, Glassmorphism styling, CSS Grid, Flexbox, custom `@keyframes`.
 * **JavaScript (ES6+)**: Clean Layered Architecture (`StorageService`, `NoteModel`, `NoteComponent`, `ModalController`, `AppController`), DOM manipulation, Event delegation, `localStorage` API.
-
----
-
-## 📄 License
-
-This project is open source and available under the [MIT License](LICENSE).
