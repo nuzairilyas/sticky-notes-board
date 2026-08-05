@@ -1,16 +1,16 @@
 # 📌 Sticky Notes Board
 
-A lightweight, interactive, and responsive web application for creating, managing, and persisting sticky notes. Built using modern web technologies (**HTML5**, **CSS3 with Glassmorphism & CSS Grid**, and **Vanilla JavaScript**), this project provides an intuitive board interface with customizable note color schemes and instant local persistence.
+A lightweight, interactive, and responsive web application for creating, managing, and persisting sticky notes. Built using modern web technologies (**HTML5**, **CSS3 with Glassmorphism & CSS Grid**, and **Vanilla JavaScript** using **Clean Modular Architecture**), this project provides an intuitive board interface with customizable note color schemes and instant local persistence.
 
 ---
 
 ## 🚀 Features
 
 - **🎨 Customizable Color Palettes**: Choose from 5 distinct note colors (Gold, Coral Red, Turquoise, Sky Blue, Soft Sage) via a modal picker when creating notes.
-- **💾 Local Persistence**: Automatically saves all notes (content and color) to the browser's `localStorage` in real-time. Notes persist across browser sessions and reloads.
-- **✨ Modern UI & Glassmorphism Aesthetics**: Modern UI featuring dynamic gradient background, glassmorphism header navigation, responsive layout grid, hover tilt animations, and smooth entry keyframes.
+- **💾 Local Persistence**: Automatically saves all notes (`id`, `content`, `color`, and `createdAt` timestamp) to the browser's `localStorage` in real-time. Notes persist across browser sessions and reloads.
+- **✨ Modern UI & Glassmorphism Aesthetics**: Modern UI featuring dynamic gradient backdrop, glassmorphism header navigation, responsive layout grid, hover tilt animations, and smooth entry keyframes.
 - **⚡ Instant Real-Time Editing**: Edit note content effortlessly with seamless continuous text auto-save on input.
-- **📱 Fully Responsive**: Uses CSS Grid (`repeat(auto-fill, minmax(250px, 1fr))`) and flexbox media queries to adapt to desktop, tablet, and mobile displays.
+- **📱 Fully Responsive**: Uses CSS Grid (`repeat(auto-fill, minmax(270px, 1fr))`) and flexbox media queries to adapt to desktop, tablet, and mobile displays.
 
 ---
 
@@ -19,20 +19,21 @@ A lightweight, interactive, and responsive web application for creating, managin
 The application interface consists of three primary visual layers:
 
 ### 1. Header & Navigation (Glassmorphic Top Bar)
-- **Title**: Styled with a drop shadow over a vibrant backdrop gradient (`linear-gradient(135deg, #667eea 0%, #764ba2 100%)`).
-- **Action Control**: Gradient `+ Add Note` button (`linear-gradient(45deg, #ff6b6b, #ee5a24)`) with hover elevation and box-shadow depth.
+- **Title**: Styled with gradient text drop shadow over a vibrant backdrop gradient (`linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #311042 100%)`).
+- **Action Control**: Gradient `+ Add Note` button (`linear-gradient(135deg, #6366f1 0%, #a855f7 100%)`) with hover elevation and box-shadow depth.
 
-### 2. Sticky Notes Grid
+### 2. Sticky Notes Grid & Board
 - **Dynamic Layout**: Flexible Grid layout supporting automatic reflow based on view width.
 - **Interactive Sticky Cards**:
   - Floating 3D card style with rounded corners and subtle drop shadows.
-  - Micro-animations: On hover, cards smoothly elevate (`translateY(-5px)`) and tilt slightly (`rotate(1deg)`).
+  - Micro-animations: On hover, cards smoothly elevate (`translateY(-6px)`) and tilt slightly (`rotate(1deg)`).
   - Entry animation: New notes animate into view using `@keyframes slideIn`.
 - **Note Actions**: Hover-revealed delete action button (`×`) tucked smoothly into the bottom right corner of each card.
+- **Empty State Display**: User-friendly zero-state guidance displayed when no notes exist.
 
 ### 3. Color Selection Modal
-- **Overlay**: Backdrop blur (`backdrop-filter: blur(5px)`) modal overlay.
-- **Palette Controls**: Interactive circular swatch buttons representing available color themes:
+- **Overlay**: Backdrop blur (`backdrop-filter: blur(10px)`) modal overlay.
+- **Palette Controls**: Interactive circular swatch buttons with selection indicators representing available color themes:
   - 💛 Yellow Gold (`#ffd700`)
   - ❤️ Coral Red (`#ff6b6b`)
   - 💚 Turquoise (`#4ecdc4`)
@@ -43,76 +44,86 @@ The application interface consists of three primary visual layers:
 
 ## 🏗️ System Architecture
 
-The application is structured as a client-side Single Page Application (SPA) following a modular event-driven Architecture.
+The application is structured as a client-side Single Page Application (SPA) following a **Modular Layered Architecture** with strict separation of concerns between Data Services, Data Models, UI View Components, and Application Controllers.
 
 ```mermaid
 flowchart TD
-    subgraph UI ["User Interface Layer (HTML5 & CSS3)"]
-        H[Header Bar & Add Note Button]
-        M[Color Picker Modal Window]
-        NG[Notes Container Grid]
-        N[Sticky Note Cards & Textareas]
+    subgraph View ["View Layer (HTML5 / CSS3 / Glassmorphism)"]
+        H["Header & '+ Add Note' Button"]
+        M["Color Picker Modal Window"]
+        NG["Notes Container Grid"]
+        N["Sticky Note Cards & Textareas"]
+        E["Empty Board State Indicator"]
     end
 
-    subgraph Controller ["Application Controller (JavaScript / DOM Engine)"]
-        EL[Event Listeners DOMContentLoaded / Click / Input]
-        CM[Create Note Engine]
-        DM[Delete Note Handler]
-        SM[Color Modal Manager]
+    subgraph Controller ["Controller & Logic Layer (JavaScript ES6+)"]
+        AC["AppController (App Orchestrator)"]
+        MC["ModalController (Modal Manager)"]
+        NC["NoteComponent (View Renderer)"]
     end
 
-    subgraph Storage ["Persistence Layer (Browser Context)"]
-        LS[(Browser localStorage: 'stickyNotes')]
+    subgraph Model ["Model Layer"]
+        NM["NoteModel (ID, Content, Color, Timestamps)"]
     end
 
-    %% User Interactions
-    H -->|Click '+ Add Note'| SM
-    SM -->|Open Modal| M
-    M -->|Select Color Swatch| CM
-    N -->|Input Text Event| EL
-    N -->|Click Delete Button| DM
+    subgraph Storage ["Persistence Service Layer"]
+        SS["StorageService (localStorage Abstraction)"]
+        LS[("Browser localStorage: 'stickyNotes'")]
+    end
+
+    %% User Actions
+    H -->|Click '+ Add Note'| MC
+    MC -->|Open Modal & Pick Swatch| AC
+    AC -->|Instantiate Model| NM
+    AC -->|Pass Model & Callbacks| NC
+    NC -->|Render DOM Element| NG
+    N -->|Input Text Event| AC
+    N -->|Click Delete Button| AC
 
     %% Data Flow & Persistence
-    EL -->|Trigger saveNotes()| LS
-    CM -->|Instantiate & Append DOM| NG
-    CM -->|Trigger saveNotes()| LS
-    DM -->|Remove DOM Element & saveNotes()| LS
-    LS -->|loadNotes() on Page Load| CM
+    AC -->|saveNotes(notes)| SS
+    SS -->|setItem / getItem| LS
+    LS -->|getNotes() on Load| SS
+    SS -->|Initialize App State| AC
+    AC -->|Toggle Empty State| E
 ```
 
 ### Data Flow Lifecycle
 
 1. **Initialization (`DOMContentLoaded`)**:
-   - `loadNotes()` executes immediately, querying `localStorage.getItem('stickyNotes')`.
-   - Parsed note objects (`{ content: string, color: string }[]`) are iterated over to dynamically construct and populate DOM cards.
+   - `AppController.init()` executes, querying `StorageService.getNotes()`.
+   - `StorageService` fetches and parses serialized note records from `localStorage.getItem('stickyNotes')`.
+   - If notes exist, `NoteComponent.render()` constructs DOM elements for each note and appends them to `#notesContainer`. If empty, `#emptyState` is rendered.
 
 2. **Creation Flow**:
-   - Clicking `+ Add Note` triggers `openColorModal()`.
-   - Selecting a color swatch captures `data-color`, sets `selectedColor`, closes the modal, and calls `createNote()`.
-   - A new note element with textarea and delete action is constructed, appended to `#notesContainer`, and initialized with the `slideIn` CSS animation.
+   - Clicking `+ Add Note` invokes `ModalController.open()`.
+   - Selecting a color swatch highlights the swatch and sets `selectedColor`.
+   - Confirming choice triggers `AppController.addNote(color)`, generating a structured `NoteModel` entity (`{ id, content, color, createdAt }`).
+   - `NoteComponent.render()` appends the new DOM note card with `slideIn` animation, and auto-saves state via `StorageService`.
 
 3. **Modification & Persistence**:
-   - Typing inside any note's `<textarea>` fires an `input` event listener connected directly to `saveNotes()`.
-   - `saveNotes()` scans all `.note` elements on the board, extracts current text and background color, and serializes the array into `localStorage.setItem('stickyNotes', JSON.stringify(notes))`.
+   - Typing inside any note's `<textarea>` triggers an `input` callback handled by `AppController.updateNoteContent(id, content)`.
+   - `StorageService.saveNotes()` serializes the updated notes array into `localStorage.setItem('stickyNotes', JSON.stringify(notes))`.
 
 4. **Deletion Flow**:
-   - Clicking a note's delete (`×`) button removes the specific note DOM node from `#notesContainer` and triggers `saveNotes()` to update local storage.
+   - Clicking a note's delete (`×`) button triggers `AppController.deleteNote(id, element)`.
+   - The note is filtered out of memory, the DOM node is removed with smooth transition, and `StorageService` updates `localStorage`.
 
 ### File & Directory Structure
 
 ```text
 sticky-notes-board/
-├── index.html        # Semantic HTML5 markup, container, and modal structural layout
-├── style.css         # Styling, design tokens, Glassmorphism, animations, grid layout
-├── script.js        # Controller logic, event handling, DOM manipulation, storage engine
-└── README.md         # Documentation
+├── index.html        # Semantic HTML5 markup, layout container, modal layout
+├── style.css         # Styling, design tokens, Glassmorphism, animations, responsive grid
+├── script.js         # Modular architecture: StorageService, NoteModel, NoteComponent, ModalController, AppController
+└── README.md         # Comprehensive project architecture documentation
 ```
 
 ---
 
 ## 🏃 How to Run
 
-Since the Sticky Notes Board is built entirely with client-side standards, no build steps, Node packages, or backend servers are strictly required.
+Since the Sticky Notes Board is built entirely with client-side web standards, no build steps, Node packages, or backend servers are strictly required.
 
 ### Method 1: Direct File Launch (Quickest)
 1. Clone or download the repository:
@@ -133,7 +144,7 @@ Since the Sticky Notes Board is built entirely with client-side standards, no bu
 ---
 
 ### Method 3: Python Local Server
-If Python is installed on your machine, you can host a local server from the terminal:
+If Python is installed on your machine, host a local server from the terminal:
 
 ```bash
 # Navigate to the project directory
@@ -162,9 +173,9 @@ Open the provided URL (e.g., `http://localhost:3000`).
 
 ## 🛠️ Built With
 
-* **HTML5**: Semantic tags (`<header>`, `<main>`, `<textarea>`, `<button>`).
+* **HTML5**: Semantic tags (`<header>`, `<main>`, `<dialog>`, `<button>`).
 * **CSS3**: Dynamic gradients, Glassmorphism styling, CSS Grid, Flexbox, custom `@keyframes`.
-* **JavaScript (ES6+)**: DOM manipulation, template string rendering, Event delegation, `localStorage` API.
+* **JavaScript (ES6+)**: Clean Layered Architecture (`StorageService`, `NoteModel`, `NoteComponent`, `ModalController`, `AppController`), DOM manipulation, Event delegation, `localStorage` API.
 
 ---
 
